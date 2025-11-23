@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 
 from .agent import analyze_log
@@ -9,26 +9,78 @@ class LogRequest(BaseModel):
 
 
 app = FastAPI(
-    title="StackGuardian – Troubleshooting Agent",
+    title="StackGuardian  Troubleshooting Agent",
     version="0.1.0",
-    description="Analyze Dev/DevOps logs and get structured root cause analysis + fix steps.",
+    description=(
+        "Analyze Dev/DevOps logs (CI/CD, Docker, Kubernetes, App runtime) "
+        "and get structured root-cause analysis + fix steps."
+    ),
 )
 
 
 @app.get("/")
 def root():
-    return {"message": "StackGuardian API is running. POST a log to /analyze to begin."}
+    return {
+        "message": "StackGuardian API is running. Use POST /analyze or POST /analyze/raw."
+    }
+
+
+def _sanitize_log(raw: str) -> str:
+    """
+    Normalize pasted logs so the model gets a clean string.
+    """
+    if not raw:
+        return ""
+    return (
+        raw.replace("\r", "")      # fix newlines
+           .replace("\t", "    ")  # replace tabs
+           .strip()
+    )
 
 
 @app.post("/analyze")
 def analyze(req: LogRequest):
     """
-    Accepts a raw log string, returns structured analysis.
+    JSON input (Swagger).
     """
     try:
-        result = analyze_log(req.log)
-        return result
+        cleaned_log = _sanitize_log(req.log)
+
+        if not cleaned_log:
+            return {
+                "log_type": "UNKNOWN",
+                "category": "OTHER",
+                "summary": "Empty log provided.",
+                "steps": ["Provide a log first."],
+            }
+
+        return analyze_log(cleaned_log)
+
     except Exception as e:
-        # This will print in the terminal and also show up in the API response
-        print("Error in /analyze:", repr(e))
+        print("Error:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/analyze/raw")
+def analyze_raw(
+    log: str = Body(..., media_type="text/plain", description="Paste raw logs (no JSON required).")
+):
+    """
+    Raw text input (Postman / plaintext).
+    """
+    try:
+        cleaned_log = _sanitize_log(log)
+
+        if not cleaned_log:
+            return {
+                "log_type": "UNKNOWN",
+                "category": "OTHER",
+                "summary": "Empty log provided.",
+                "steps": ["Provide a log first."],
+            }
+
+        return analyze_log(cleaned_log)
+
+    except Exception as e:
+        print("Error:", repr(e))
         raise HTTPException(status_code=500, detail=str(e))
