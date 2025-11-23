@@ -1,0 +1,6 @@
+Branch: develop 
+[Pipeline] error
+[Pipeline] // script
+[Pipeline] stage
+Stage "Build and Deploy Artifact" skipped due to earlier failure(s)
+ERROR: Invalid branch name format: null
