@@ -92,6 +92,7 @@ stackguardian-agent/
 ├── requirements.txt    # Python dependencies
 ├── README.md           # You are here 
 └── ROADMAP.md          # Future enhancements and ideas
+---
 ⚙️ Local Setup
 1. Prerequisites
 
@@ -254,3 +255,4 @@ Backend docs: http://<EC2_PUBLIC_IP>:8000/docs
 
 Streamlit UI: http://<EC2_PUBLIC_IP>:8501
 
+---
