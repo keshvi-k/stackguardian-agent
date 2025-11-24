@@ -1,258 +1,232 @@
-# StackGuardian – Troubleshooting Agent
+# 🛡️ StackGuardian — Troubleshooting Agent
 
-An AI-powered assistant that helps DevOps engineers and developers quickly **understand, triage, and fix** failures in CI/CD, Docker, Kubernetes, and application logs.
+StackGuardian is an AI-powered troubleshooting assistant that analyzes DevOps, CI/CD, Docker, Kubernetes, and Jenkins logs to automatically detect failures and provide root-cause analysis + recommended fixes.
 
-StackGuardian takes raw Jenkins/Docker/K8s/app logs, sends them to an OpenAI model, and returns a **structured root-cause analysis** plus concrete remediation steps.
-
----
-
-## Key Features
-
-- **Log understanding, not just search**
-  - Paste messy, multiline logs (Jenkins pipeline, Docker, K8s, app logs).
-  - The agent detects error patterns and summarizes what actually went wrong.
-
-- **Structured, actionable output**
-  - Returns a JSON object with:
-    - `log_type` – e.g., `CICD`, `KUBERNETES`, `DOCKER`, `APP`
-    - `category` – e.g., `CONFIG`, `NETWORK`, `RUNTIME`
-    - `summary` – one-paragraph root cause explanation
-    - `steps` – ordered remediation checklist for engineers
-
-- **FastAPI backend API**
-  - `/` – health/metadata endpoint  
-  - `/analyze` – accepts structured JSON `{ "log": "…" }`  
-  - Optional `/analyze/raw` (if enabled) for raw pasted logs.
-
-- **Streamlit web UI**
-  - Paste logs in a text area, click **“Analyze Log”**, and see:
-    - Human-readable explanation
-    - Risk/impact
-    - Recommended fix steps
-
-- **Cloud-ready**
-  - Built and tested on an **Ubuntu AWS EC2** instance.
-  - Backend (FastAPI) + UI (Streamlit) run on the same host.
-  - Easy to put behind Nginx or an ALB later.
+Built with **Python (FastAPI)**, **OpenAI GPT-4.1**, **Streamlit UI**, and deployable on **AWS EC2**.
 
 ---
 
-## Tech Stack
+## 🚀 Features
+- **AI Log Analysis**  
+  Upload or paste log files (.txt or raw logs). The agent extracts patterns and produces:
+  - Root cause summary  
+  - Log category (CI/CD, Kubernetes, Docker, etc.)  
+  - Risk level  
+  - Step-by-step remediation
 
-**Language**
+- **FastAPI Backend**  
+  `/analyze` API endpoint processes logs and sends structured prompts to OpenAI.
 
-- Python 3.10+
+- **Streamlit Frontend UI**  
+  Clean, modern interface for DevOps engineers to paste logs and view instant results.
 
-**Backend**
-
-- [FastAPI](https://fastapi.tiangolo.com/) – REST API for log analysis  
-- [Uvicorn](https://www.uvicorn.org/) – ASGI server  
-- [Pydantic](https://docs.pydantic.dev/) – request/response models  
-
-**AI / LLM**
-
-- [OpenAI Python SDK](https://github.com/openai/openai-python)  
-- Model: `gpt-4.1-mini` (via the new **Responses API**)
-
-**Frontend / UI**
-
-- [Streamlit](https://streamlit.io/) – lightweight UI for pasting logs and viewing analysis
-
-**Other**
-
-- `requests` – UI → backend HTTP calls  
-- `.env` management for secrets (`OPENAI_API_KEY`)
-
-**Infra (deployment example)**
-
-- AWS EC2 (Ubuntu 24.04 LTS)
-- Security group with open ports for:
-  - `22` (SSH)
-  - `8000` (FastAPI)
-  - `8501` (Streamlit)
+- **Fully Deployable on AWS EC2**  
+  Clone → install → run backend + UI.
 
 ---
 
-## Project Structure
+## 🧠 Tech Stack
 
-```text
+### **Backend**
+- Python 3
+- FastAPI
+- Uvicorn
+- OpenAI API (GPT-4.1)
+
+### **Frontend**
+- Streamlit  
+- Python (requests)
+
+### **DevOps**
+- Ubuntu EC2 Instance  
+- Systemd optional for background service  
+- Security groups for ports 8000 + 8501
+
+---
+
+## 📁 Project Structure
+
+```
 stackguardian-agent/
 ├── app/
 │   ├── __init__.py
-│   ├── agent.py        # Core AI logic: calls OpenAI and structures the response
-│   └── main.py         # FastAPI app + /analyze endpoints
+│   ├── agent.py             # AI logic + OpenAI structured output
+│   ├── main.py              # FastAPI backend /analyze endpoint
 │
 ├── ui/
-│   └── app.py          # Streamlit UI: paste logs and call backend
+│   ├── app.py               # Streamlit UI
 │
 ├── test_logs/
-│   └── jenkins_invalid_branch.log  # Sample failing Jenkins pipeline log
+│   ├── jenkins_invalid_branch.log
 │
-├── .env.example        # Template for environment variables
-├── requirements.txt    # Python dependencies
-├── README.md           # You are here 
-└── ROADMAP.md          # Future enhancements and ideas
+├── .env.example             # Sample environment file
+├── requirements.txt         # Python dependencies
+├── README.md
+├── ROADMAP.md
+```
+
 ---
-⚙️ Local Setup
-1. Prerequisites
 
-Python 3.10+
+## ⚙️ Local Setup (Start Here)
 
-pip
-
-An OpenAI API key with access to gpt-4.1-mini
-
-2. Clone the repository
+### 🔹 1. Clone the Repository
+```bash
 git clone https://github.com/keshvi-k/stackguardian-agent.git
 cd stackguardian-agent
+```
 
-3. Create and activate a virtual environment
-python -m venv venv
-source venv/bin/activate      # macOS / Linux
-# OR
-venv\Scripts\activate         # Windows (PowerShell / CMD)
+### 🔹 2. Create Virtual Environment
+```bash
+python3 -m venv venv
+```
 
-4. Install dependencies
+#### Activate it:
+
+**macOS / Linux**
+```bash
+source venv/bin/activate
+```
+
+**Windows**
+```bash
+venv\Scripts\activate
+```
+
+---
+
+### 🔹 3. Install Dependencies
+```bash
 pip install -r requirements.txt
+```
 
-5. Configure environment variables
+---
 
-Create a .env file in the project root, based on .env.example:
+### 🔹 4. Add OpenAI API Key
+Create a `.env` file:
 
+```bash
 cp .env.example .env
+```
 
+Edit `.env`:
 
-Then edit .env and set at least:
+```
+OPENAI_API_KEY=your_key_here
+```
 
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4.1-mini
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
+---
 
+### 🔹 5. Run the Backend (FastAPI)
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-(For local development you can keep BACKEND_HOST as 0.0.0.0 and call http://localhost:8000.)
+Backend available at:
 
-🚀 Running the App Locally
-1. Start the FastAPI backend
+```
+http://localhost:8000/docs
+```
 
-From the project root (with the virtualenv activated):
+---
 
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+### 🔹 6. Run the Frontend (Streamlit UI)
+Open new terminal (with venv activated):
 
+```bash
+streamlit run ui/app.py --server.port 8501
+```
 
-You can now open:
+UI available at:
 
-FastAPI docs: http://localhost:8000/docs
-
-Health endpoint: GET http://localhost:8000/
-
-2. Start the Streamlit UI
-
-In a second terminal (same virtualenv):
-
-streamlit run ui/app.py
-
-
-By default, Streamlit will run at:
-
+```
 http://localhost:8501
+```
 
-The UI will send requests to http://localhost:8000/analyze (or to the URL configured in the UI code / env variable).
+---
 
-🧪 Example Usage
+## ☁️ AWS EC2 Deployment (Ubuntu)
 
-Open http://localhost:8501 in your browser.
+### 1. Launch EC2 Instance
+- Ubuntu 22.04 or 24.04  
+- Allow inbound:
+  - **Port 22** (SSH)
+  - **Port 8000** (backend)
+  - **Port 8501** (UI)
 
-Paste a failing Jenkins log, e.g.:
+### 2. SSH Into Instance
+```bash
+ssh -i "stackguardian-key.pem" ubuntu@<ec2-public-ip>
+```
 
-Branch: develop
-[Pipeline] error
-ERROR: Invalid branch name format: null
-Build step 'Execute shell' marked build as failure
-Finished: FAILURE
-
-
-Click “Analyze Log”.
-
-Backend response (simplified):
-
-{
-  "log_type": "CICD",
-  "category": "CONFIG",
-  "summary": "The Jenkins pipeline failed early due to an invalid or null branch name, causing downstream stages to be skipped.",
-  "steps": [
-    "Verify the branch name variable is correctly set and passed into the pipeline.",
-    "Add logging or echo statements to confirm the branch value early in the pipeline.",
-    "Validate that the SCM/checkout step retrieves a valid branch and not null.",
-    "Update branch naming rules and enforce them in the pipeline configuration."
-  ]
-}
-
-
-The Streamlit UI renders this in a clean, human-friendly way.
-
-☁️ AWS EC2 Deployment (High-Level)
-
-These are the same steps we used to get StackGuardian running on an Ubuntu EC2 instance:
-
-Create EC2 instance
-
-AMI: Ubuntu 24.04 LTS
-
-Instance type: t3.small / t3.medium (or similar)
-
-Attach a security group that allows:
-
-22 (SSH) – your IP
-
-8000 (FastAPI)
-
-8501 (Streamlit)
-
-SSH into the instance
-
-ssh -i stackguardian-key.pem ubuntu@<EC2_PUBLIC_IP>
-
-
-Install Python and Git
-
+### 3. Install Python + Git
+```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip git
+sudo apt install python3 python3-pip python3-venv git -y
+```
 
-
-Clone repo & set up environment
-
+### 4. Clone Repo
+```bash
 git clone https://github.com/keshvi-k/stackguardian-agent.git
 cd stackguardian-agent
+```
 
+### 5. Create Venv & Install Dependencies
+```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
-cp .env.example .env
-nano .env      # paste OPENAI_API_KEY etc.
+### 6. Start Backend
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+```
 
+### 7. Start UI
+```bash
+streamlit run ui/app.py --server.port 8501 --server.address 0.0.0.0 &
+```
 
-Run backend and UI (using screen or tmux)
-
-Backend:
-
-screen -S backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-# Ctrl+A, D to detach
-
-
-UI:
-
-screen -S ui
-streamlit run ui/app.py --server.address=0.0.0.0 --server.port=8501
-# Ctrl+A, D to detach
-
-
-Access from browser
-
-Backend docs: http://<EC2_PUBLIC_IP>:8000/docs
-
-Streamlit UI: http://<EC2_PUBLIC_IP>:8501
+### EC2 Public URLs:
+```
+http://<EC2-IP>:8000/docs      # backend
+http://<EC2-IP>:8501           # frontend
+```
 
 ---
+
+## 📝 Sample Output (from AI)
+
+```
+{
+  "log_type": "KUBERNETES",
+  "category": "RESOURCE",
+  "summary": "Kubernetes cannot pull the image 'nginx:latest' due to missing manifest.",
+  "steps": [
+    "Verify image exists in registry",
+    "Try docker pull manually",
+    "Check network or proxy issues",
+    "Ensure imagePullSecrets are configured",
+    "Specify a non-latest image tag"
+  ]
+}
+```
+
+---
+
+## 🧭 Roadmap
+- Multi-log comparison  
+- Real-time log streaming agent  
+- Multi-cloud deployments (AWS / GCP / Azure)  
+- Slack & Teams integration  
+
+---
+
+## ❤️ Contributing
+Pull requests welcome.
+
+---
+
+## 📄 License
+MIT License.
+
