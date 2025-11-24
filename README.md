@@ -254,4 +254,3 @@ Backend docs: http://<EC2_PUBLIC_IP>:8000/docs
 
 Streamlit UI: http://<EC2_PUBLIC_IP>:8501
 
-For production, you can front this with Nginx and HTTPS, or move to a containerized setup (Docker + ECS/EKS).
